@@ -1,0 +1,26 @@
+
+
+[1m[33mWARNING! (B[m[33m****WARNING****(B[m
+If you are experiencing issues building Blender, _*TRY A FRESH, CLEAN BUILD FIRST*_!
+The same goes for install_deps itself, if you encounter issues, please first erase everything in /home/matias/Moonlighting/blender-src and /opt/lib
+(provided obviously you did not add anything yourself in those dirs!), and run install_deps.sh again!
+Often, changes in the libs built by this script, or in your distro package, cannot be handled simply, so...
+
+
+If you're using CMake add this to your configuration flags:
+  -D WITH_CYCLES_OSL=ON
+  -D WITH_LLVM=ON
+  -D LLVM_VERSION=
+  -D WITH_CODEC_FFMPEG=ON
+  -D FFMPEG_LIBRARIES='avformat;avcodec;avutil;avdevice;swscale;rt;theora;theoradec;theoraenc;vorbis;vorbisenc;vorbisfile;ogg;openjpeg'
+
+Or even simpler, just run (in your blender-source dir):
+  make -j4 BUILD_CMAKE_ARGS=" -D WITH_CYCLES_OSL=ON -D WITH_LLVM=ON -D LLVM_VERSION= -D WITH_CODEC_FFMPEG=ON -D FFMPEG_LIBRARIES='avformat;avcodec;avutil;avdevice;swscale;rt;theora;theoradec;theoraenc;vorbis;vorbisenc;vorbisfile;ogg;openjpeg'"
+
+If you're using SCons add this to your user-config:
+WITH_BF_OCIO = True
+WITH_BF_OIIO = True
+WITH_BF_CYCLES = True
+WITH_BF_BOOST = True
+BF_FFMPEG_LIB = 'avformat avcodec swscale avutil avdevice theora theoradec theoraenc vorbis vorbisenc vorbisfile ogg openjpeg'
+WITH_BF_3DMOUSE = False
