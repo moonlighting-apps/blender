@@ -15,45 +15,25 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * The Original Code is Copyright (C) 2001-2002 by NaN Holding BV.
+ * The Original Code is Copyright (C) 2005 Blender Foundation.
  * All rights reserved.
  *
  * The Original Code is: all of this file.
  *
- * Contributor(s): none yet.
+ * Contributor(s): Benoit Bolsee.
  *
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#ifndef __BKE_WRITEFRAMESERVER_H__
-#define __BKE_WRITEFRAMESERVER_H__
-
-/** \file BKE_writeframeserver.h
- *  \ingroup bke
+/** \file blender/python/intern/gpu.h
+ *  \ingroup pythonintern
+ *
+ * Initializes the gpu Python module.
  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef __FRAMSERVER_H__
+#define __FRAMSERVER_H__
 
-#define REQ_MAX_LEN 4096
+PyObject *FS_initPython(void);
 
-struct RenderData;	
-struct ReportList;
-struct Scene;
-
-int BKE_frameserver_start(struct Scene *scene, struct RenderData *rd, int rectx, int recty, struct ReportList *reports);
-void BKE_frameserver_end(void);
-int BKE_frameserver_append(struct RenderData *rd, int start_frame, int frame, int *pixels,
-                           int rectx, int recty, struct ReportList *reports);
-int BKE_frameserver_loop(struct RenderData *rd, struct ReportList *reports);
-
-/* python helpers */
-char *BKE_frameserver_get_changes(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
+#endif /* __GPU_H__ */

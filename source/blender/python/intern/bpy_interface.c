@@ -52,6 +52,7 @@
 
 #include "bpy.h"
 #include "gpu.h"
+#include "frameserver.h"
 #include "bpy_rna.h"
 #include "bpy_path.h"
 #include "bpy_util.h"
@@ -229,6 +230,7 @@ static struct _inittab bpy_internal_modules[] = {
 #endif
 	{(char *)"gpu", GPU_initPython},
 	{(char *)"idprop", BPyInit_idprop},
+    {(char *)"frameserver", FS_initPython},
 	{NULL, NULL}
 };
 

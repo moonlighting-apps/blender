@@ -73,6 +73,8 @@ static int write_ppm;
 static int render_width;
 static int render_height;
 
+static int set_changes(char *req);
+
 
 #if defined(_WIN32)
 static int startup_socket_system(void)
@@ -250,6 +252,28 @@ static int handle_request(RenderData *rd, char *req)
 		safe_puts(buf);
 		return -1;
 	}
+    if (pathlen > 12 && memcmp(path, "/new_render?", 12) == 0) {
+        char buf[4096];
+        printf("creating new render\n");
+        if (set_changes(path+12) != 0) {
+            sprintf(buf,
+		        "HTTP/1.1 200 OK\r\n"
+		        "Content-Type: text/html\r\n"
+		        "\r\n"
+                "Error :( \n"
+            );
+        } else {
+            sprintf(buf,
+		        "HTTP/1.1 200 OK\r\n"
+		        "Content-Type: text/html\r\n"
+		        "\r\n"
+                "ok :)\n"
+            );
+        }
+        safe_puts(buf);
+        G.is_break = TRUE; /* Abort render */
+        return -1;
+    }
 	if (strcmp(path, "/close.txt") == 0) {
 		safe_puts(good_bye);
 		G.is_break = TRUE; /* Abort render */
@@ -394,6 +418,33 @@ void BKE_frameserver_end(void)
 	}
 	closesocket(sock);
 	shutdown_socket_system();
+}
+
+/* Python module helpers */
+static char _last_request[REQ_MAX_LEN] = "/something/dummy/super/path&int=1\0";
+
+static int set_changes(char *req)
+{
+    printf("setting _last_request to %s\n", req);
+    strncpy(_last_request, req, REQ_MAX_LEN);
+    _last_request[REQ_MAX_LEN-1] = '\0';
+    return 0;
+}
+
+char *BKE_frameserver_get_changes(void)
+{
+    char *buf;
+
+    buf = calloc(REQ_MAX_LEN, sizeof(char));
+
+    if (strlen(_last_request) > 0) {
+        sprintf(buf, "%s", _last_request);
+        _last_request[0] = '\0';
+    } else {
+        buf[0] = '\0';
+    }
+
+    return buf;
 }
 
 #endif /* WITH_FRAMESERVER */
