@@ -30,6 +30,14 @@
  * use firefox too ;-)
  */
 
+/*
+ *  BKE_frameserver_start:
+ *  ======================
+ *
+ *  Acepta la conexion (solo es una por render). Basicamente saque todo lo de
+ *  BKE_frameserver_loop y lo puse en esta funcion.
+ */
+
 #ifdef WITH_FRAMESERVER
 
 #include <string.h>
@@ -112,7 +120,19 @@ static int closesocket(int fd)
 
 int BKE_frameserver_start(struct Scene *scene, RenderData *UNUSED(rd), int rectx, int recty, ReportList *reports)
 {
-	struct sockaddr_in addr;
+
+    struct timeval tv;
+    struct sockaddr_in addr;
+    fd_set readfds; 
+    int len, rval;
+#ifdef FREE_WINDOWS
+	int socklen;
+#else
+	unsigned int socklen;
+#endif
+	char buf[4096];
+
+	struct sockaddr_in master_addr;
 	int arg = 1;
 	
 	(void)scene; /* unused */
@@ -130,11 +150,11 @@ int BKE_frameserver_start(struct Scene *scene, RenderData *UNUSED(rd), int rectx
 
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &arg, sizeof(arg));
 
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(U.frameserverport);
-	addr.sin_addr.s_addr = INADDR_ANY;
+	master_addr.sin_family = AF_INET;
+	master_addr.sin_port = htons(U.frameserverport);
+	master_addr.sin_addr.s_addr = INADDR_ANY;
 
-	if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+	if (bind(sock, (struct sockaddr *)&master_addr, sizeof(master_addr)) < 0) {
 		shutdown_socket_system();
 		BKE_report(reports, RPT_ERROR, "Cannot bind to socket");
 		return 0;
@@ -149,6 +169,62 @@ int BKE_frameserver_start(struct Scene *scene, RenderData *UNUSED(rd), int rectx
 
 	render_width = rectx;
 	render_height = recty;
+
+    /* Wait until the client connects */
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
+
+    FD_ZERO(&readfds);
+    FD_SET(sock, &readfds);
+
+    /* wait for the socket to connect */
+    rval = select(sock + 1, &readfds, NULL, NULL, &tv);
+    if (rval < 0) {
+        /* Can't connect */
+        return -1;
+    }
+
+    if (rval == 0) {
+        /* nothign to be done */
+        return -1;
+    }
+
+    socklen = sizeof(addr);
+
+    if ((connsock = accept(sock, (struct sockaddr *)&addr, &socklen)) < 0) {
+        -1;
+    }
+
+    /* wait for Client */
+	for (;;) {
+		/* give 10 seconds for telnet testing... */
+		tv.tv_sec = 10;
+		tv.tv_usec = 0;
+
+		rval = select(connsock + 1, &readfds, NULL, NULL, &tv);
+		if (rval > 0) {
+			break;
+		}
+		else if (rval == 0) {
+			return -1;
+		}
+		else if (rval < 0) {
+			if (!select_was_interrupted_by_signal()) {
+				return -1;
+			}
+		}
+	}
+
+    len = recv(connsock, buf, sizeof(buf) -1, 0);
+    if (len < 0) {
+        /* error receiving */
+        return -1;
+    }
+
+    buf[len] = 0;
+
+
+
 
 	return 1;
 }
@@ -260,73 +336,6 @@ static int handle_request(RenderData *rd, char *req)
 
 int BKE_frameserver_loop(RenderData *rd, ReportList *UNUSED(reports))
 {
-	fd_set readfds;
-	struct timeval tv;
-	struct sockaddr_in addr;
-	int len, rval;
-#ifdef FREE_WINDOWS
-	int socklen;
-#else
-	unsigned int socklen;
-#endif
-	char buf[4096];
-
-	if (connsock != -1) {
-		closesocket(connsock);
-		connsock = -1;
-	}
-
-	tv.tv_sec = 1;
-	tv.tv_usec = 0;
-
-	FD_ZERO(&readfds);
-	FD_SET(sock, &readfds);
-
-	rval = select(sock + 1, &readfds, NULL, NULL, &tv);
-	if (rval < 0) {
-		return -1;
-	}
-
-	if (rval == 0) { /* nothing to be done */
-		return -1;
-	}
-
-	socklen = sizeof(addr);
-
-	if ((connsock = accept(sock, (struct sockaddr *)&addr, &socklen)) < 0) {
-		return -1;
-	}
-
-	FD_ZERO(&readfds);
-	FD_SET(connsock, &readfds);
-
-	for (;;) {
-		/* give 10 seconds for telnet testing... */
-		tv.tv_sec = 10;
-		tv.tv_usec = 0;
-
-		rval = select(connsock + 1, &readfds, NULL, NULL, &tv);
-		if (rval > 0) {
-			break;
-		}
-		else if (rval == 0) {
-			return -1;
-		}
-		else if (rval < 0) {
-			if (!select_was_interrupted_by_signal()) {
-				return -1;
-			}
-		}
-	}
-
-	len = recv(connsock, buf, sizeof(buf) - 1, 0);
-
-	if (len < 0) {
-		return -1;
-	}
-
-	buf[len] = 0;
-
 	return handle_request(rd, buf);
 }
 
