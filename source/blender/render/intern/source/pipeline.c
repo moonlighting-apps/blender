@@ -150,6 +150,7 @@ static int default_break(void *UNUSED(arg)) { return G.is_break == TRUE; }
 
 static void stats_background(void *UNUSED(arg), RenderStats *rs)
 {
+    /*
 	uintptr_t mem_in_use, mmap_in_use, peak_memory;
 	float megs_used_memory, mmap_used_memory, megs_peak_memory;
 
@@ -184,6 +185,7 @@ static void stats_background(void *UNUSED(arg), RenderStats *rs)
 
 	fputc('\n', stdout);
 	fflush(stdout);
+    */
 }
 
 void RE_FreeRenderResult(RenderResult *res)
