@@ -117,22 +117,31 @@ static int closesocket(int fd)
 }
 #endif
 
-int BKE_frameserver_start(struct Scene *scene, RenderData *rd, int rectx, int recty, ReportList *reports)
+/* Server functions, this will set up the sockets and shut it down on
+ * explicits calls. */
+int BKE_server_start(struct ReportList *reports)
 {
 	struct sockaddr_in master_addr;
 	int arg = 1;
-	
-	(void)scene; /* unused */
+    char buf[64];
+
+    if (sock != 0) {
+        sprintf(buf, "Socket already in use (fd:%d)", sock);
+        BKE_report(reports, RPT_INFO, buf);
+        return 1;
+    }
 
 	if (!startup_socket_system()) {
-		BKE_report(reports, RPT_ERROR, "Cannot startup socket system");
+        if (reports != NULL)
+            BKE_report(reports, RPT_ERROR, "Cannot startup socket system");
 		return 0;
 	}
 
     /* Socket creation */
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 		shutdown_socket_system();
-		BKE_report(reports, RPT_ERROR, "Cannot open socket");
+        if (reports != NULL)
+            BKE_report(reports, RPT_ERROR, "Cannot open socket");
 		return 0;
 	}
 
@@ -144,17 +153,39 @@ int BKE_frameserver_start(struct Scene *scene, RenderData *rd, int rectx, int re
 
 	if (bind(sock, (struct sockaddr *)&master_addr, sizeof(master_addr)) < 0) {
 		shutdown_socket_system();
-		BKE_report(reports, RPT_ERROR, "Cannot bind to socket");
+        if (reports != NULL)
+            BKE_report(reports, RPT_ERROR, "Cannot bind to socket");
 		return 0;
 	}
 
 	if (listen(sock, SOMAXCONN) < 0) {
 		shutdown_socket_system();
-		BKE_report(reports, RPT_ERROR, "Cannot establish listen backlog");
+        if (reports != NULL)
+            BKE_report(reports, RPT_ERROR, "Cannot establish listen backlog");
 		return 0;
 	}
     if (connsock != -1) {
         SOCK_CLOSE(connsock);
+    }
+
+    return 1;
+}
+
+void BKE_server_stop(void) {
+	if (connsock != -1) {
+		SOCK_CLOSE(connsock);
+	}
+	closesocket(sock);
+    sock = 0;
+	shutdown_socket_system();
+}
+
+int BKE_frameserver_start(struct Scene *scene, RenderData *rd, int rectx, int recty, ReportList *reports)
+{
+	(void)scene; /* unused */
+
+    if (!BKE_server_start(reports)) {
+        return 0;
     }
 
 	render_width = rectx;
@@ -162,7 +193,6 @@ int BKE_frameserver_start(struct Scene *scene, RenderData *rd, int rectx, int re
 
     /* set to the first frame of the render! */
     currframe = rd->sfra;
-
 
 	return 1;
 }
@@ -461,11 +491,11 @@ int BKE_frameserver_append(RenderData *UNUSED(rd), int UNUSED(start_frame), int 
 
 void BKE_frameserver_end(void)
 {
+    /* Only close the client socket. the master server needs to
+     * be closed in a explicit way (see BKE_server_stop) */
 	if (connsock != -1) {
 		SOCK_CLOSE(connsock);
 	}
-	closesocket(sock);
-	shutdown_socket_system();
 }
 
 /* Python module helpers */
@@ -479,17 +509,9 @@ static int set_changes(char *req)
     return 0;
 }
 
-char *BKE_frameserver_get_changes(void)
+void BKE_frameserver_get_changes(char *dest)
 {
-    char *buf;
-
-    buf = calloc(REQ_MAX_LEN, sizeof(char));
-
-    if (strlen(_last_request) > 0) {
-        sprintf(buf, "%s", _last_request);
-    }
-
-    return buf;
+    strncpy(dest, _last_request, REQ_MAX_LEN);
 }
 
 #endif /* WITH_FRAMESERVER */

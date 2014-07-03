@@ -72,19 +72,45 @@ static PyObject *PyInit_frameserver(void)
 
 /* dummy function */
 PyDoc_STRVAR(FRAMESERVER_get_path_doc,
-    "Get a dummy path"
+    "Get a the params form a request of a new server"
+);
+PyDoc_STRVAR(FRAMESERVER_start_server_doc,
+    "Start the server initializing the sockets."
+);
+PyDoc_STRVAR(FRAMESERVER_stop_server_doc,
+    "Start the server initializing the sockets."
 );
 
 static PyObject *FRAMESERVER_get_path(PyObject *UNUSED(self), PyObject *UNUSED(args))
 {
-    char *path = BKE_frameserver_get_changes();
-    PyObject *obj = Py_BuildValue("s", path);
-    free(path);
+    char path[4096];
+    PyObject *obj;
+
+    BKE_frameserver_get_changes(path);
+    obj = Py_BuildValue("s", path);
+
     return obj;
 }
 
+static PyObject *FRAMESERVER_start_server(PyObject *UNUSED(self), PyObject *UNUSED(args))
+{
+    int started = BKE_server_start(NULL);
+    PyObject *obj = Py_BuildValue("d", started);
+
+    return obj;
+}
+
+static PyObject *FRAMESERVER_stop_server(PyObject *UNUSED(self), PyObject *UNUSED(args))
+{
+    BKE_frameserver_end();
+    Py_RETURN_NONE;
+}
+
+
 static PyMethodDef meth_get_path[] = {
-    {"get_path", (PyCFunction)FRAMESERVER_get_path, METH_NOARGS, FRAMESERVER_get_path_doc}
+    {"get_path", (PyCFunction)FRAMESERVER_get_path, METH_NOARGS, FRAMESERVER_get_path_doc},
+    {"start_server", (PyCFunction)FRAMESERVER_start_server, METH_NOARGS, FRAMESERVER_start_server_doc},
+    {"stop_server", (PyCFunction)FRAMESERVER_stop_server, METH_NOARGS, FRAMESERVER_stop_server_doc}
 };
 
 PyObject *FS_initPython(void)

@@ -42,6 +42,8 @@ struct RenderData;
 struct ReportList;
 struct Scene;
 
+int BKE_server_start(struct ReportList *reports);
+
 int BKE_frameserver_start(struct Scene *scene, struct RenderData *rd, int rectx, int recty, struct ReportList *reports);
 void BKE_frameserver_end(void);
 int BKE_frameserver_append(struct RenderData *rd, int start_frame, int frame, int *pixels,
@@ -49,7 +51,7 @@ int BKE_frameserver_append(struct RenderData *rd, int start_frame, int frame, in
 int BKE_frameserver_loop(struct RenderData *rd, struct ReportList *reports);
 
 /* python helpers */
-char *BKE_frameserver_get_changes(void);
+void BKE_frameserver_get_changes(char *dest);
 
 #ifdef __cplusplus
 }
