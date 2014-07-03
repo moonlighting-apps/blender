@@ -67,8 +67,6 @@
 
 #include "DNA_scene_types.h"
 
-#define FPRINT(x) fprintf(stderr,x)
-
 #define SOCK_CLOSE(s) closesocket(s); s = -1
 
 static int sock;
@@ -121,13 +119,11 @@ static int closesocket(int fd)
  * explicits calls. */
 int BKE_server_start(struct ReportList *reports)
 {
-	struct sockaddr_in master_addr;
-	int arg = 1;
+    struct sockaddr_in master_addr;
+    int arg = 1;
     char buf[64];
 
     if (sock != 0) {
-        sprintf(buf, "Socket already in use (fd:%d)", sock);
-        BKE_report(reports, RPT_INFO, buf);
         return 1;
     }
 
@@ -244,7 +240,6 @@ static int safe_puts(char *s)
 static int next_frame(RenderData *rd) {
     int res = currframe;
     currframe += 1;
-    fprintf(stderr, "Current frame on frameserver %d\n", currframe);
     if (currframe > rd->efra) {
         G.is_break = TRUE; /* Abort render */
         return -1;
@@ -362,7 +357,6 @@ int BKE_frameserver_loop(RenderData *rd, ReportList *reports)
             BKE_report(reports, RPT_ERROR, "accept fail");
             return retval;
         }
-        fprintf(stderr, "Connected to %d\n", connsock);
     }
     
     if (need_recv) {
@@ -481,7 +475,6 @@ static void serve_ppm(int *pixels, int rectx, int recty)
 int BKE_frameserver_append(RenderData *UNUSED(rd), int UNUSED(start_frame), int frame, int *pixels,
                            int rectx, int recty, ReportList *UNUSED(reports))
 {
-	fprintf(stderr, "Serving frame: %d\n", frame);
 	if (write_ppm) {
 		serve_ppm(pixels, rectx, recty);
 	}
