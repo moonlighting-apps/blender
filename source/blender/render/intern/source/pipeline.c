@@ -2719,7 +2719,6 @@ static int do_write_image_or_movie(Render *re, Main *bmain, Scene *scene, bMovie
 		/* imbuf knows which rects are not part of ibuf */
 		IMB_freeImBuf(ibuf);
 
-		printf("Append frame %d", scene->r.cfra);
 	}
 	else {
 		if (name_override)
@@ -2774,14 +2773,11 @@ static int do_write_image_or_movie(Render *re, Main *bmain, Scene *scene, bMovie
 	re->i.lastframetime = PIL_check_seconds_timer() - re->i.starttime;
 	
 	BLI_timestr(re->i.lastframetime, name, sizeof(name));
-	printf(" Time: %s", name);
 	
 	BLI_callback_exec(G.main, NULL, BLI_CB_EVT_RENDER_STATS);
 
 	BLI_timestr(re->i.lastframetime - render_time, name, sizeof(name));
-	printf(" (Saving: %s)\n", name);
 	
-	fputc('\n', stdout);
 	fflush(stdout); /* needed for renderd !! (not anymore... (ton)) */
 
 	return ok;
