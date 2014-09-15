@@ -52,6 +52,7 @@ int BKE_frameserver_loop(struct RenderData *rd, struct ReportList *reports);
 
 /* python helpers */
 void BKE_frameserver_get_changes(char *dest);
+void BKE_frameserver_only_one_frame(int param);
 
 #ifdef __cplusplus
 }

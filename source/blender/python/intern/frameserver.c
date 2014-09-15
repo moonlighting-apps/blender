@@ -80,6 +80,9 @@ PyDoc_STRVAR(FRAMESERVER_start_server_doc,
 PyDoc_STRVAR(FRAMESERVER_stop_server_doc,
     "Start the server initializing the sockets."
 );
+PyDoc_STRVAR(FRAMESERVER_only_one_frame_doc,
+    "Set a flag if the frameserver will serve one frame per request. Returns True on success, False otherwise"
+);
 
 static PyObject *FRAMESERVER_get_path(PyObject *UNUSED(self), PyObject *UNUSED(args))
 {
@@ -106,17 +109,30 @@ static PyObject *FRAMESERVER_stop_server(PyObject *UNUSED(self), PyObject *UNUSE
     Py_RETURN_NONE;
 }
 
+static PyObject *FRAMESERVER_only_one_frame(PyObject *UNUSED(self), PyObject *args)
+{
+    int param;
+    if (!PyArg_ParseTuple(args, "i", &param)) {
+        Py_RETURN_FALSE;
+    }
+    BKE_frameserver_only_one_frame(param);
+    Py_RETURN_TRUE;
+}
 
-static PyMethodDef meth_get_path[] = {
+
+static PyMethodDef py_methods[] = {
     {"get_path", (PyCFunction)FRAMESERVER_get_path, METH_NOARGS, FRAMESERVER_get_path_doc},
+    {"only_one_frame", (PyCFunction) FRAMESERVER_only_one_frame, METH_VARARGS, FRAMESERVER_only_one_frame_doc},
     {"start_server", (PyCFunction)FRAMESERVER_start_server, METH_NOARGS, FRAMESERVER_start_server_doc},
     {"stop_server", (PyCFunction)FRAMESERVER_stop_server, METH_NOARGS, FRAMESERVER_stop_server_doc}
 };
 
 PyObject *FS_initPython(void)
 {
+    PyMethodDef *meth_def = NULL;
     PyObject *module = PyInit_frameserver();
-    PyModule_AddObject(module, "get_path", (PyObject *)PyCFunction_New(meth_get_path, NULL));
+    PyModule_AddObject(module, "get_path", (PyObject *)PyCFunction_New(py_methods, NULL));
+    PyModule_AddObject(module, "only_one_frame", (PyObject *)PyCFunction_New(&py_methods[1], NULL));
     PyDict_SetItemString(PyImport_GetModuleDict(), "frameserver", module);
 
     return module;

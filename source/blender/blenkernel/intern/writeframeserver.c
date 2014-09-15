@@ -69,6 +69,9 @@
 
 #define SOCK_CLOSE(s) closesocket(s); s = -1
 
+#include <stdio.h>
+
+
 static int sock;
 static int connsock;
 static int write_ppm;
@@ -341,6 +344,7 @@ static int handle_request(RenderData *rd, char *req)
     }
 
     if ((pathlen > 15 && memcmp(path, "/images/ppm/all", 15) == 0)) {
+        only_one_frame = false;
         write_ppm = 1;
         return next_frame(rd);
     }
@@ -525,6 +529,11 @@ static int set_changes(char *req)
 void BKE_frameserver_get_changes(char *dest)
 {
     strncpy(dest, _last_request, REQ_MAX_LEN);
+}
+
+void BKE_frameserver_only_one_frame(int param)
+{
+    only_one_frame = (bool) param;
 }
 
 #endif /* WITH_FRAMESERVER */
