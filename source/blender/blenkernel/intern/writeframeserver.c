@@ -526,7 +526,7 @@ static int set_changes(char *req)
     struct tm *tm_info;
     time(&timer);
     tm_info = localtime(&timer);
-    strftime(time_buffer, 25, "%Y:%m:%d%H:%M:%S", tm_info);
+    strftime(time_buffer, 25, "%Y:%m:%d %H:%M:%S", tm_info);
     printf("[%s] New request with params: %s\n", time_buffer, req);
     strncpy(_last_request, req, REQ_MAX_LEN);
     _last_request[REQ_MAX_LEN-1] = '\0';
