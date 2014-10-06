@@ -255,7 +255,9 @@ static int safe_puts(char *s)
 static int next_frame(RenderData *rd) {
     int res = currframe;
     currframe += 1;
+    printf(".");
     if (currframe > rd->efra) {
+        printf(".\n");
         G.is_break = TRUE; /* Abort render */
         return -1;
     }
