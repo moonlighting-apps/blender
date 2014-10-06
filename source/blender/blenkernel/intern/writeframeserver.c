@@ -520,7 +520,6 @@ static char _last_request[REQ_MAX_LEN] = "";
 
 static int set_changes(char *req)
 {
-    printf("setting _last_request to %s\n", req);
     strncpy(_last_request, req, REQ_MAX_LEN);
     _last_request[REQ_MAX_LEN-1] = '\0';
     return 0;
