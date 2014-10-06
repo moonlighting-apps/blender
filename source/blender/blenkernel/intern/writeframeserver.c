@@ -34,6 +34,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 
 #if defined(_WIN32)
 #include <winsock2.h>
@@ -520,6 +521,13 @@ static char _last_request[REQ_MAX_LEN] = "";
 
 static int set_changes(char *req)
 {
+    time_t timer;
+    char time_buffer[25];
+    struct tm *tm_info;
+    time(&timer);
+    tm_info = localtime(&timer);
+    strftime(time_buffer, 25, "%Y:%m:%d%H:%M:%S", tm_info);
+    printf("[%s] New request with params: %s\n", time_buffer, req);
     strncpy(_last_request, req, REQ_MAX_LEN);
     _last_request[REQ_MAX_LEN-1] = '\0';
     return 0;
