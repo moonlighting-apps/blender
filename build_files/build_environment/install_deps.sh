@@ -1782,7 +1782,7 @@ install_DEB() {
   X264_DEV="libx264-dev"
   check_package_version_ge_DEB $X264_DEV $X264_VERSION_MIN
   if [ $? -eq 0 ]; then
-    install_packages_DEB $X264_DEV
+    #install_packages_DEB $X264_DEV
     X264_USE=true
   fi
 
